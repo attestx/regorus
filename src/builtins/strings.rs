@@ -1137,8 +1137,15 @@ fn substring(span: &Span, params: &[Ref<Expr>], args: &[Value], strict: bool) ->
         }
         (Some(offset), _) if offset < 0 => Ok(Value::Undefined),
         (Some(offset), Some(length)) => {
-            let start = s.chars().skip(offset as usize);
-            let length = if length < 0 { s.len() } else { length as usize };
+            // Saturate before converting to the target's pointer width. A
+            // large index must not wrap into the string on 32-bit targets.
+            let offset = usize::try_from(offset).unwrap_or(s.len()).min(s.len());
+            let start = s.chars().skip(offset);
+            let length = if length < 0 {
+                s.len()
+            } else {
+                usize::try_from(length).unwrap_or(s.len()).min(s.len())
+            };
             Ok(Value::String(start.take(length).collect::<String>().into()))
         }
         _ => Ok(Value::String("".into())),

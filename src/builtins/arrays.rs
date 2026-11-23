@@ -50,14 +50,13 @@ fn slice(span: &Span, params: &[Ref<Expr>], args: &[Value], _strict: bool) -> Re
 
     let start = match start.as_i64() {
         Some(n) if n < 0 => 0,
-        Some(n) => n as usize,
+        Some(n) => usize::try_from(n).unwrap_or(array.len()).min(array.len()),
         _ => return Ok(Value::Undefined),
     };
 
     let stop = match stop.as_i64() {
         Some(n) if n < 0 => 0,
-        Some(n) if n as usize > array.len() => array.len(),
-        Some(n) => n as usize,
+        Some(n) => usize::try_from(n).unwrap_or(array.len()).min(array.len()),
         _ => return Ok(Value::Undefined),
     };
 
